@@ -7,7 +7,6 @@
     ':dependencyDashboard',
     ':disableRateLimiting',
     ':semanticCommits',
-    ':separatePatchReleases',
   ],
   dependencyDashboard: true,
   dependencyDashboardTitle: 'Renovate Dashboard 🤖',
