@@ -28,7 +28,7 @@ nodes:
     installDisk: "/dev/disk/by-id/ata-INTEL_SSDSC2BW240A3L_CVCV304508JG240CGN"
     machineSpec:
       secureboot: false
-    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
+    talosImageURL: factory.talos.dev/installer/4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b
     controlPlane: true
     networkInterfaces:
       - deviceSelector:
@@ -42,12 +42,19 @@ nodes:
         mtu: 1500
         vip:
           ip: "192.168.1.60"
+    extensionServices:
+      - name: tailscale
+        environment:
+          - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+          - TS_ACCEPT_DNS=true
+          - TS_AUTH_ONCE=true
+          - TS_ROUTES=10.69.0.0/24
   - hostname: "utm"
     ipAddress: "192.168.1.11"
     installDisk: "/dev/vda"
     machineSpec:
       secureboot: false
-    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
+    talosImageURL: factory.talos.dev/installer/4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b
     controlPlane: false
     networkInterfaces:
       - deviceSelector:
@@ -59,6 +66,37 @@ nodes:
           - network: "0.0.0.0/0"
             gateway: "192.168.1.254"
         mtu: 1500
+    extensionServices:
+      - name: tailscale
+        environment:
+          - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+          - TS_ACCEPT_DNS=true
+          - TS_AUTH_ONCE=true
+          - TS_ROUTES=10.69.1.0/24
+  - hostname: "hs-talos-1"
+    ipAddress: "2.59.254.159"
+    installDisk: "/dev/vda"
+    machineSpec:
+      secureboot: false
+    talosImageURL: factory.talos.dev/installer/4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b
+    controlPlane: false
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "00:16:3e:e7:99:9b"
+        dhcp: true
+        addresses:
+          - "2.59.254.159/24"
+        routes:
+          - network: "0.0.0.0/0"
+            gateway: "2.59.254.1"
+        mtu: 1500
+    extensionServices:
+      - name: tailscale
+        environment:
+          - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+          - TS_ACCEPT_DNS=true
+          - TS_AUTH_ONCE=true
+          - TS_ROUTES=10.69.2.0/24
 
 # Global patches
 patches:
@@ -73,3 +111,10 @@ controlPlane:
   patches:
     - "@./patches/controller/admission-controller-patch.yaml"
     - "@./patches/controller/cluster.yaml"
+
+worker:
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/tailscale
