@@ -46,9 +46,11 @@ nodes:
       - name: tailscale
         environment:
           - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
-          - TS_ACCEPT_DNS=true
           - TS_AUTH_ONCE=true
-          - TS_ROUTES=10.69.0.0/24
+          - TS_ACCEPT_DNS=false
+          - TS_ROUTES=10.69.0.0/24,192.168.1.0/26
+          - TS_EXTRA_ARGS=--accept-routes
+
   - hostname: "utm"
     ipAddress: "192.168.1.11"
     installDisk: "/dev/vda"
@@ -70,9 +72,11 @@ nodes:
       - name: tailscale
         environment:
           - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
-          - TS_ACCEPT_DNS=true
           - TS_AUTH_ONCE=true
-          - TS_ROUTES=10.69.1.0/24
+          - TS_ACCEPT_DNS=false
+          - TS_ROUTES=10.69.1.0/24,192.168.1.0/26
+          - TS_EXTRA_ARGS=--accept-routes
+
   - hostname: "hs-talos-1"
     ipAddress: "2.59.254.159"
     installDisk: "/dev/vda"
@@ -94,9 +98,10 @@ nodes:
       - name: tailscale
         environment:
           - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
-          - TS_ACCEPT_DNS=true
           - TS_AUTH_ONCE=true
+          - TS_ACCEPT_DNS=false
           - TS_ROUTES=10.69.2.0/24
+          - TS_EXTRA_ARGS=--accept-routes
 
 # Global patches
 patches:
