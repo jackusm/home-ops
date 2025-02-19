@@ -12,6 +12,6 @@ resources:
   - ./jetstack.yaml
   - ./k8s-gateway.yaml
   - ./metrics-server.yaml
+  - ./rook-ceph.yaml
   - ./spegel.yaml
   - ./stakater.yaml
-  - ./tailscale.yaml
