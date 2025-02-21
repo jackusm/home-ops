@@ -84,6 +84,31 @@ spec:
           - name: t430
             devices:
               - name: /dev/disk/by-id/ata-ST31000524AS_6VPG4QYV
+      resources:
+    api:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        memory: 512Mi
+    mgr:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        memory: 512Mi
+    mon:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        memory: 512Mi
+    osd:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        memory: 512Mi
     cephBlockPools:
       - name: ceph-blockpool
         spec:
@@ -142,7 +167,7 @@ spec:
                 cpu: 100m
                 memory: 0.5Gi #1
               limits:
-                memory: 2Gi #2
+                memory: 2Gi #4
         storageClass:
           enabled: true
           isDefault: false
