@@ -71,10 +71,15 @@ spec:
         connections:
           requireMsgr2: true
       storage:
-        useAllNodes: true
-        useAllDevices: true
+        useAllNodes: false
+        useAllDevices: false
         config:
           osdsPerDevice: "1"
+        nodes:
+          - name: t430
+            devices:
+              - name: /dev/disk/by-id/ata-ST2000VM003-1ET164_W521PB6D
+              - name: /dev/disk/by-id/ata-ST31000524AS_6VPG4QYV
       resources:
     api:
       requests:
