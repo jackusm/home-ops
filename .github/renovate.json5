@@ -52,6 +52,12 @@
   },
   packageRules: [
     {
+      description: "auto-merge all non-breaking semver",
+      matchUpdateTypes: ["minor", "patch"],
+      automerge: true,
+      automergeType: "pr"
+    },
+    {
       description: 'Auto-merge trusted container digests',
       matchDatasources: [
         'docker',
