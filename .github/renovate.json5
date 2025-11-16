@@ -56,6 +56,7 @@
       matchUpdateTypes: ["minor", "patch"],
       automerge: true,
       automergeType: "pr"
+      minimumReleaseAge: "3 days"
     },
     {
       description: 'Auto-merge trusted container digests',
