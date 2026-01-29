@@ -69,11 +69,18 @@ spec:
         data:
           config.yaml: |-
             ingress:
+              # Kubernetes API TCP tunnel (MUST be before wildcard!)
+              - hostname: "k8sep.${SECRET_DOMAIN}"
+                originRequest:
+                  proxyType: socks
+                service: tcp://kubernetes.default.svc.cluster.local:443
+              # Existing HTTP ingress
               - hostname: "*.${SECRET_DOMAIN}"
                 originRequest:
                   http2Origin: true
                   originServerName: external.${SECRET_DOMAIN}
                 service: https://envoy-external.{{ .Release.Namespace }}.svc.cluster.local:443
+              # Catch-all
               - service: http_status:404
     persistence:
       config-file:

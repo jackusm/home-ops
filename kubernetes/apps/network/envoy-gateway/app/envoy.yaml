@@ -52,39 +52,6 @@ spec:
   infrastructure:
     annotations:
       external-dns.alpha.kubernetes.io/hostname: external.${SECRET_DOMAIN}
-      # lbipam.cilium.io/ips: "4.3.2.4"
-      lbipam.cilium.io/ips: "148.135.207.246"
-  listeners:
-    - name: http
-      protocol: HTTP
-      port: 80
-      allowedRoutes:
-        namespaces:
-          from: Same
-    - name: https
-      protocol: HTTPS
-      port: 443
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        certificateRefs:
-          - kind: Secret
-            name: ${SECRET_DOMAIN/./-}-production-tls
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: envoy-internal
-  annotations:
-    external-dns.alpha.kubernetes.io/target: internal.${SECRET_DOMAIN}
-spec:
-  gatewayClassName: envoy
-  infrastructure:
-    annotations:
-      external-dns.alpha.kubernetes.io/hostname: internal.${SECRET_DOMAIN}
-      # lbipam.cilium.io/ips: "4.3.2.3"
-      lbipam.cilium.io/ips: "148.135.207.246"
   listeners:
     - name: http
       protocol: HTTP
@@ -159,9 +126,6 @@ metadata:
 spec:
   parentRefs:
     - name: envoy-external
-      namespace: network
-      sectionName: http
-    - name: envoy-internal
       namespace: network
       sectionName: http
   rules:
