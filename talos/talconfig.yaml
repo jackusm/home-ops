@@ -4,11 +4,10 @@ clusterName: kubernetes
 talosVersion: "${talosVersion}"
 kubernetesVersion: "${kubernetesVersion}"
 
-endpoint: https://4.3.2.1:6443
+endpoint: https://k8sep.${SECRET_DOMAIN}:6443
 additionalApiServerCertSans: &sans
   - "127.0.0.1"
-  - "4.3.2.1"
-  - "k8sep.mofuq.com"
+  - "k8sep.${SECRET_DOMAIN}"
 additionalMachineCertSans: *sans
 
 clusterPodNets: ["10.42.0.0/16"]
@@ -33,11 +32,9 @@ nodes:
         addresses:
           - "148.135.207.246/24"
         routes:
-          - gateway: "1.2.3.1"
+          - gateway: "148.135.207.1"
             network: 0.0.0.0/0
         mtu: 1500
-        vip:
-          ip: "4.3.2.1"
     patches:
       - # Load kernel modules
         |-

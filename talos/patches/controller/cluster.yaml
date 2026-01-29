@@ -14,8 +14,6 @@ cluster:
   etcd:
     extraArgs:
       listen-metrics-urls: http://0.0.0.0:2381
-    advertisedSubnets:
-      - 1.2.3.0/24
   proxy:
     disabled: true
   scheduler:
