@@ -1,2 +1,4 @@
 kubernetes-dh001.yaml
 talosconfig
+kubernetes-deluxhost001.yaml
+kubernetes-hostslim001.yaml
