@@ -18,31 +18,6 @@ cniConfig:
   name: none
 
 nodes:
-  - hostname: "deluxhost001"
-    ipAddress: "148.135.207.246"
-    installDisk: "/dev/vda"
-    machineSpec:
-      secureboot: false
-    talosImageURL: factory.talos.dev/installer/4dd8e3a8b6203d3c14f049da8db4d3bb0d6d3e70c5e89dfcc1e709e81914f63c
-    controlPlane: true
-    networkInterfaces:
-      - deviceSelector:
-          hardwareAddr: "00:10:65:3b:8a:c7"
-        dhcp: false
-        addresses:
-          - "148.135.207.246/32"
-        routes:
-          - gateway: "148.135.207.1"
-            network: 0.0.0.0/0
-        mtu: 1420
-    patches:
-      - # Load kernel modules
-        |-
-        machine:
-          kernel:
-            modules:
-              - name: zfs
-
   - hostname: "hostslim001"
     ipAddress: "2.59.254.159"
     installDisk: "/dev/vda"
@@ -58,6 +33,31 @@ nodes:
           - "2.59.254.159/32"
         routes:
           - gateway: "2.59.254.1"
+            network: 0.0.0.0/0
+        mtu: 1420
+    patches:
+      - # Load kernel modules
+        |-
+        machine:
+          kernel:
+            modules:
+              - name: zfs
+
+  - hostname: "deluxhost001"
+    ipAddress: "148.135.207.246"
+    installDisk: "/dev/vda"
+    machineSpec:
+      secureboot: false
+    talosImageURL: factory.talos.dev/installer/4dd8e3a8b6203d3c14f049da8db4d3bb0d6d3e70c5e89dfcc1e709e81914f63c
+    controlPlane: false
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "00:10:65:3b:8a:c7"
+        dhcp: false
+        addresses:
+          - "148.135.207.246/32"
+        routes:
+          - gateway: "148.135.207.1"
             network: 0.0.0.0/0
         mtu: 1420
     patches:
