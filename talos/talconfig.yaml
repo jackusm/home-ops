@@ -34,7 +34,7 @@ nodes:
         routes:
           - gateway: "148.135.207.1"
             network: 0.0.0.0/0
-        mtu: 1500
+        mtu: 1420
     patches:
       - # Load kernel modules
         |-
@@ -59,7 +59,7 @@ nodes:
         routes:
           - gateway: "2.59.254.1"
             network: 0.0.0.0/0
-        mtu: 1500
+        mtu: 1420
     patches:
       - # Load kernel modules
         |-
