@@ -6,6 +6,7 @@ machine:
       - 1.0.0.1
     kubespan:
       enabled: true
+      advertiseKubernetesNetworks: true
   features:
     kubePrism:
       enabled: true
