@@ -1,0 +1,31 @@
+machine:
+  sysctls:
+    # --- Existing Watchdog/Namespaces ---
+    fs.inotify.max_user_watches: "1048576"
+    fs.inotify.max_user_instances: "8192"
+    user.max_user_namespaces: "11255"
+
+    # --- Existing ARP Cache ---
+    net.ipv4.neigh.default.gc_thresh1: "4096"
+    net.ipv4.neigh.default.gc_thresh2: "8192"
+    net.ipv4.neigh.default.gc_thresh3: "16384"
+
+    # --- OPTIMIZED FOR KUBESPAN / LONG DISTANCE ---
+    # Enable BBR Congestion Control (Critical for high latency)
+    net.core.default_qdisc: "fq"
+    net.ipv4.tcp_congestion_control: "bbr"
+
+    # Increase TCP Buffers (Allow larger windows for high latency)
+    # Old: 7.5MB -> New: ~25MB (Enough to fill a 200Mbps link at 200ms latency)
+    net.core.rmem_max: "25000000"
+    net.core.wmem_max: "25000000"
+    net.core.rmem_default: "2500000"
+    net.core.wmem_default: "2500000"
+    net.ipv4.tcp_rmem: "4096 87380 25000000"
+    net.ipv4.tcp_wmem: "4096 87380 25000000"
+
+    # Enable TCP Fast Open (Reduces handshake latency)
+    net.ipv4.tcp_fastopen: "3"
+
+    # Keep existing slow start fix
+    net.ipv4.tcp_slow_start_after_idle: "0"

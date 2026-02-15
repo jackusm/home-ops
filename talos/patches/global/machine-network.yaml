@@ -1,0 +1,13 @@
+machine:
+  network:
+    disableSearchDomain: true
+    nameservers:
+      - 1.1.1.1
+      - 1.0.0.1
+    kubespan:
+      enabled: true
+      advertiseKubernetesNetworks: true
+  features:
+    kubePrism:
+      enabled: true
+      port: 7445

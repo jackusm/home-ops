@@ -1,0 +1,68 @@
+---
+clusterName: kubernetes
+
+talosVersion: "${talosVersion}"
+kubernetesVersion: "${kubernetesVersion}"
+
+endpoint: https://k8sep.${SECRET_DOMAIN}:6443
+additionalApiServerCertSans: &sans
+  - "127.0.0.1"
+  - "k8sep.${SECRET_DOMAIN}"
+additionalMachineCertSans: *sans
+
+clusterPodNets: ["10.42.0.0/16"]
+clusterSvcNets: ["10.43.0.0/16"]
+
+# Disable built-in CNI to use Cilium
+cniConfig:
+  name: none
+
+nodes:
+  - hostname: "hostslim001"
+    ipAddress: "2.59.254.159"
+    installDisk: "/dev/vda"
+    machineSpec:
+      secureboot: false
+    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
+    controlPlane: true
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "00:16:3e:e7:99:9b"
+        dhcp: false
+        addresses:
+          - "2.59.254.159/24"
+        routes:
+          - gateway: "2.59.254.1"
+            network: 0.0.0.0/0
+        mtu: 1500
+
+  - hostname: "deluxhost001"
+    ipAddress: "148.135.207.246"
+    installDisk: "/dev/vda"
+    machineSpec:
+      secureboot: false
+    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
+    controlPlane: false
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "00:10:65:3b:8a:c7"
+        dhcp: false
+        addresses:
+          - "148.135.207.246/24"
+        routes:
+          - gateway: "148.135.207.1"
+            network: 0.0.0.0/0
+        mtu: 1500
+
+# Global patches
+patches:
+  - "@./patches/global/machine-files.yaml"
+  - "@./patches/global/machine-kubelet.yaml"
+  - "@./patches/global/machine-network.yaml"
+  - "@./patches/global/machine-sysctls.yaml"
+  - "@./patches/global/machine-time.yaml"
+
+# Controller patches
+controlPlane:
+  patches:
+    - "@./patches/controller/cluster.yaml"
