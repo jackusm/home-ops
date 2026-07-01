@@ -23,7 +23,7 @@ releases:
     chart: oci://ghcr.io/spegel-org/helm-charts/spegel
     version: 0.7.2
     values: ["./templates/values.yaml.gotmpl"]
-    needs: ["kube-system/spegel"]
+    needs: ["kube-system/coredns"]
 
   - name: cert-manager
     namespace: cert-manager
