@@ -2,10 +2,10 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: tg-s3_processor
+  name: tg-s3-processor
 spec:
   interval: 1h
-  path: ./kubernetes/apps/default/tg-s3_processor/app
+  path: ./kubernetes/apps/default/tg-s3-processor/app
   postBuild:
     substituteFrom:
       - name: cluster-secrets

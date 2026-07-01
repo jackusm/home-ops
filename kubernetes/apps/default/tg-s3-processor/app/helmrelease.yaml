@@ -2,15 +2,15 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: tg-s3_processor
+  name: tg-s3-processor
 spec:
   chartRef:
     kind: OCIRepository
-    name: tg-s3_processor
+    name: tg-s3-processor
   interval: 1h
   values:
     controllers:
-      tg-s3_processor:
+      tg-s3-processor:
         type: statefulset
         # One replica for now; scaling up is just replicas + new PROCESSOR_IDs
         # (the downward API gives each pod a stable id from its pod name).
@@ -38,7 +38,7 @@ spec:
                   fieldPath: metadata.name
             envFrom:
               - secretRef:
-                  name: tg-s3_processor-secret
+                  name: tg-s3-processor-secret
             command:
               - /bin/sh
               - -c
@@ -82,7 +82,7 @@ spec:
                   fieldPath: metadata.name
             envFrom:
               - secretRef:
-                  name: tg-s3_processor-secret
+                  name: tg-s3-processor-secret
             probes:
               liveness: &probes
                 enabled: true
