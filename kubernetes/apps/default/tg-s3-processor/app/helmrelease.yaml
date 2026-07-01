@@ -29,9 +29,8 @@ spec:
           # cloudflared. Reuses the processor image (alpine + busybox wget/sed).
           register:
             image:
-              # TODO: same image as the processor container (published by you).
               repository: docker.io/jackus/tg-s3_processor
-              tag: latest
+              tag: 0.1
             env:
               PROCESSOR_ID:
                 fieldRef:
@@ -69,9 +68,8 @@ spec:
           # --- processor (gotd MTProto file gateway) ---
           app:
             image:
-              # TODO: point at your registry once you publish the image.
               repository: docker.io/jackus/tg-s3_processor
-              tag: latest
+              tag: 0.1
             env:
               PORT: &port 3000
               # Stable per-pod identity so re-registration is idempotent (the
