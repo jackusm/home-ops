@@ -36,7 +36,7 @@ nodes:
             network: 0.0.0.0/0
         mtu: 1500
 
-  - hostname: "deluxhost001"
+  - hostname: "deluxhost0001"
     ipAddress: "148.135.207.246"
     installDisk: "/dev/vda"
     machineSpec:
