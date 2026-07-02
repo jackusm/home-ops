@@ -116,10 +116,11 @@ spec:
               - run
               - --token-file
               - /shared/tunnel_token
-              - --metrics
-              - 0.0.0.0:8080
             env:
-              NO_AUTOUPDATE: "true"
+              NO_AUTOUPDATE: true
+              TUNNEL_METRICS: 0.0.0.0:8080
+              TUNNEL_POST_QUANTUM: true # disable when using http2
+              TUNNEL_TRANSPORT_PROTOCOL: quic # or http2
             probes:
               liveness:
                 enabled: true
