@@ -28,10 +28,10 @@ spec:
           # config; the init only exists to sequence the token ahead of
           # cloudflared. Reuses the processor image (alpine + busybox wget/sed).
           register:
-            imagePullPolicy: Always
             image:
               repository: docker.io/jackus/tg-s3_processor
               tag: 0.2.9
+              pullPolicy: Always
             env:
               PROCESSOR_ID:
                 fieldRef:
@@ -68,10 +68,10 @@ spec:
         containers:
           # --- processor (gotd MTProto file gateway) ---
           app:
-            imagePullPolicy: Always
             image:
               repository: docker.io/jackus/tg-s3_processor
               tag: 0.2.9
+              pullPolicy: Always
             env:
               PORT: &port 3000
               # Stable per-pod identity so re-registration is idempotent (the
