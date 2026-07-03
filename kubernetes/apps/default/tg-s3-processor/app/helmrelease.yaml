@@ -31,7 +31,7 @@ spec:
             imagePullPolicy: Always
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.1.1
+              tag: 0.2.9
             env:
               PROCESSOR_ID:
                 fieldRef:
@@ -71,7 +71,7 @@ spec:
             imagePullPolicy: Always
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.1.1
+              tag: 0.2.9
             env:
               PORT: &port 3000
               # Stable per-pod identity so re-registration is idempotent (the
