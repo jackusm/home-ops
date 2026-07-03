@@ -84,7 +84,10 @@ spec:
               - secretRef:
                   name: tg-s3-processor-secret
             probes:
-              liveness: &probes
+              # Liveness = "is the HTTP server alive?" Must NOT gate on bot
+              # auth — that's a 2+ min boot and would look like a hang. /health
+              # should return 200 the moment the server is listening.
+              liveness:
                 enabled: true
                 custom: true
                 spec:
@@ -93,16 +96,30 @@ spec:
                     port: *port
                   initialDelaySeconds: 0
                   periodSeconds: 10
-                  timeoutSeconds: 1
+                  timeoutSeconds: 3
                   failureThreshold: 3
-              readiness: *probes
+              # Readiness = "can this pod serve traffic?" Gates on bots being
+              # authed via /ready, so the pod stays NotReady during boot without
+              # getting killed.
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ready
+                    port: *port
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
               capabilities: { drop: ["ALL"] }
             resources:
               requests:
-                cpu: 10m
+                cpu: 500m
+                memory: 256Mi
               limits:
                 memory: 512Mi
           # --- cloudflared connector (STOCK image, unmodified) ---
