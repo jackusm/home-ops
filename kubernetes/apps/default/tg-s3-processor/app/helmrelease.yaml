@@ -28,9 +28,10 @@ spec:
           # config; the init only exists to sequence the token ahead of
           # cloudflared. Reuses the processor image (alpine + busybox wget/sed).
           register:
+            imagePullPolicy: Always
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.2
+              tag: 0.1
             env:
               PROCESSOR_ID:
                 fieldRef:
@@ -67,9 +68,10 @@ spec:
         containers:
           # --- processor (gotd MTProto file gateway) ---
           app:
+            imagePullPolicy: Always
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.2
+              tag: 0.1
             env:
               PORT: &port 3000
               # Stable per-pod identity so re-registration is idempotent (the
@@ -119,8 +121,8 @@ spec:
             env:
               NO_AUTOUPDATE: true
               TUNNEL_METRICS: 0.0.0.0:8080
-              TUNNEL_POST_QUANTUM: true # disable when using http2
-              TUNNEL_TRANSPORT_PROTOCOL: quic # or http2
+              TUNNEL_POST_QUANTUM: false # disable when using http2
+              TUNNEL_TRANSPORT_PROTOCOL: http2 # or quic
             probes:
               liveness:
                 enabled: true
