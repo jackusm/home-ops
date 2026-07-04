@@ -14,7 +14,7 @@ spec:
         type: statefulset
         # One replica for now; scaling up is just replicas + new PROCESSOR_IDs
         # (the downward API gives each pod a stable id from its pod name).
-        replicas: 1
+        replicas: 2
         strategy: RollingUpdate
         annotations:
           reloader.stakater.com/auto: "true"
