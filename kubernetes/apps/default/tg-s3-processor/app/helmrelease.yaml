@@ -30,7 +30,7 @@ spec:
           register:
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.2.9
+              tag: 0.3.2
               pullPolicy: Always
             env:
               PROCESSOR_ID:
@@ -70,7 +70,7 @@ spec:
           app:
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.2.9
+              tag: 0.3.2
               pullPolicy: Always
             env:
               PORT: &port 3000
