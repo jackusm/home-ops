@@ -11,9 +11,7 @@ spec:
   values:
     controllers:
       tg-s3-processor:
-        type: statefulset
-        # One replica for now; scaling up is just replicas + new PROCESSOR_IDs
-        # (the downward API gives each pod a stable id from its pod name).
+        type: deployment
         replicas: 2
         strategy: RollingUpdate
         annotations:
@@ -32,6 +30,12 @@ spec:
               repository: docker.io/jackus/tg-s3_processor
               tag: 0.3.2
               pullPolicy: Always
+            # NOTE: was fieldRef metadata.name under StatefulSet for a
+            # stable, predictable processor id so the Worker could return the
+            # existing CF tunnel on re-registration (idempotent provisioning).
+            # Under a Deployment pod names are random, so the id is now unique
+            # per restart — a fresh tunnel is provisioned each boot and the old
+            # one is orphaned. Leaked tunnels are now an accepted tradeoff.
             env:
               PROCESSOR_ID:
                 fieldRef:
@@ -74,9 +78,11 @@ spec:
               pullPolicy: Always
             env:
               PORT: &port 3000
-              # Stable per-pod identity so re-registration is idempotent (the
-              # Worker returns the existing tunnel instead of provisioning a new
-              # one each restart, which would leak tunnels).
+              # PROCESSOR_ID is the pod's random name under a Deployment — unique
+              # per restart, so the Worker provisions a new CF tunnel each boot
+              # rather than reusing one. Reusable tunnel identity is no longer a
+              # requirement; leaked tunnels are accepted (Worker is expected to
+              # reclaim/evict them).
               PROCESSOR_ID:
                 fieldRef:
                   fieldPath: metadata.name
