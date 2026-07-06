@@ -16,76 +16,27 @@ spec:
         strategy: RollingUpdate
         annotations:
           reloader.stakater.com/auto: "true"
-        initContainers:
-          # --- register: provisions the per-processor tunnel and drops its
-          # connector token at /shared/tunnel_token BEFORE the app containers
-          # start. Using an init container (not a sidecar that polls) lets the
-          # STOCK, unmodified cloudflare/cloudflared image read the token via
-          # --token-file and just run — no custom wrapper image. The processor
-          # re-registers itself at boot too (idempotent) to fetch its runtime
-          # config; the init only exists to sequence the token ahead of
-          # cloudflared. Reuses the processor image (alpine + busybox wget/sed).
-          register:
-            image:
-              repository: docker.io/jackus/tg-s3_processor
-              tag: 0.3.2
-              pullPolicy: Always
-            # NOTE: was fieldRef metadata.name under StatefulSet for a
-            # stable, predictable processor id so the Worker could return the
-            # existing CF tunnel on re-registration (idempotent provisioning).
-            # Under a Deployment pod names are random, so the id is now unique
-            # per restart — a fresh tunnel is provisioned each boot and the old
-            # one is orphaned. Leaked tunnels are now an accepted tradeoff.
-            env:
-              PROCESSOR_ID:
-                fieldRef:
-                  fieldPath: metadata.name
-            envFrom:
-              - secretRef:
-                  name: tg-s3-processor-secret
-            command:
-              - /bin/sh
-              - -c
-              - |
-                set -e
-                mkdir -p /shared
-                resp=$(wget -qO- --header="Content-Type: application/json" \
-                  --post-data='{"id":"'"$PROCESSOR_ID"'","secret":"'"$PROCESSOR_AUTH_SECRET"'"}' \
-                  "$WORKER_URL/processor/register")
-                token=$(printf '%s' "$resp" | sed -n 's/.*"tunnel_token":"\([^"]*\)".*/\1/p')
-                if [ -z "$token" ]; then
-                  echo "register: no tunnel_token in response (tunnel provisioning disabled?): $resp" >&2
-                  exit 1
-                fi
-                printf '%s' "$token" > /shared/tunnel_token.tmp
-                mv /shared/tunnel_token.tmp /shared/tunnel_token
-                echo "register: tunnel token written for cloudflared"
-            securityContext:
-              allowPrivilegeEscalation: false
-              readOnlyRootFilesystem: true
-              capabilities: { drop: ["ALL"] }
-            resources:
-              requests:
-                cpu: 10m
-              limits:
-                memory: 64Mi
         containers:
           # --- processor (gotd MTProto file gateway) ---
+          # In the BotFleet DO architecture, the processor connects to the
+          # global BotFleet Durable Object over WebSocket for bot/rate-limit
+          # coordination. All pods load all bots; the DO replicates state.
+          # Traffic reaches the processor via the shared cloudflare-tunnel
+          # (single route tg-s3-processor.${SECRET_DOMAIN} -> k8s Service
+          # round-robin). No per-pod tunnel sidecar or init container.
           app:
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.3.2
+              tag: 0.4.2
               pullPolicy: Always
             env:
               PORT: &port 3000
-              # PROCESSOR_ID is the pod's random name under a Deployment — unique
-              # per restart, so the Worker provisions a new CF tunnel each boot
-              # rather than reusing one. Reusable tunnel identity is no longer a
-              # requirement; leaked tunnels are accepted (Worker is expected to
-              # reclaim/evict them).
-              PROCESSOR_ID:
-                fieldRef:
-                  fieldPath: metadata.name
+              # PROCESSOR_ROUTE is the shared tunnel hostname the worker uses
+              # to reach any processor pod. The processor sends it at
+              # registration for backward compat but it is no longer
+              # load-bearing — the worker independently knows this via its own
+              # PROCESSOR_ROUTE var.
+              PROCESSOR_ROUTE: "tg-s3-processor.${SECRET_DOMAIN}"
             envFrom:
               - secretRef:
                   name: tg-s3-processor-secret
@@ -128,55 +79,11 @@ spec:
                 memory: 256Mi
               limits:
                 memory: 512Mi
-          # --- cloudflared connector (STOCK image, unmodified) ---
-          # The token was written to /shared/tunnel_token by the register init
-          # container, so cloudflared can read it directly via --token-file and
-          # run as this processor's tunnel connector. No shell/wrapper needed.
-          tunnel:
-            image:
-              repository: docker.io/cloudflare/cloudflared
-              tag: 2026.6.1
-            args:
-              - tunnel
-              - run
-              - --token-file
-              - /shared/tunnel_token
-            env:
-              NO_AUTOUPDATE: true
-              TUNNEL_METRICS: 0.0.0.0:8080
-              TUNNEL_POST_QUANTUM: false # disable when using http2
-              TUNNEL_TRANSPORT_PROTOCOL: http2 # or quic
-            probes:
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /ready
-                    port: &tunnel-metrics 8080
-                  initialDelaySeconds: 10
-                  periodSeconds: 10
-                  timeoutSeconds: 1
-                  failureThreshold: 6
-            securityContext:
-              allowPrivilegeEscalation: false
-              readOnlyRootFilesystem: true
-              capabilities: { drop: ["ALL"] }
-            resources:
-              requests:
-                cpu: 10m
-              limits:
-                memory: 128Mi
     defaultPodOptions:
       securityContext:
         runAsNonRoot: true
-        # Both images are non-root (processor uid 65534, cloudflared 65532 in
-        # its image); the pod runs all containers as 65534. fsGroup 65534 makes
-        # the shared emptyDir writable by the init (token) and readable by all.
         runAsUser: 65534
         runAsGroup: 65534
-        fsGroup: 65534
-        fsGroupChangePolicy: OnRootMismatch
     service:
       app:
         ports:
@@ -186,11 +93,3 @@ spec:
       app:
         endpoints:
           - port: http
-    persistence:
-      # Shared: the register init container writes the tunnel token here, the
-      # cloudflared container reads it. emptyDir is wiped on pod restart — fine,
-      # the init re-registers (idempotent) and rewrites it every boot.
-      shared:
-        type: emptyDir
-        globalMounts:
-          - path: /shared

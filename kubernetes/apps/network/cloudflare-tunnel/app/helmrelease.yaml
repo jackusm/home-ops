@@ -74,6 +74,12 @@ spec:
                 originRequest:
                   proxyType: socks
                 service: tcp://kubernetes.default.svc.cluster.local:443
+              # tg-s3 processor: single shared route for all processor pods.
+              # cloudflared forwards each request to ONE backend pod (k8s
+              # Service round-robin) — no fan-out, no duplication. The BotFleet
+              # DO coordinates bot/rate-limit state across pods.
+              - hostname: "tg-s3-processor.${SECRET_DOMAIN}"
+                service: http://tg-s3-processor.default.svc.cluster.local:3000
               # Existing HTTP ingress
               - hostname: "*.${SECRET_DOMAIN}"
                 originRequest:
