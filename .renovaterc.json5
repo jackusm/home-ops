@@ -63,6 +63,13 @@
       ignoreTests: true,
     },
     {
+      description: "Ensure Talos supported upgrade path",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/siderolabs/installer"],
+      "separateMajorMinor": true,
+      "separateMinorPatch": true
+    },
+    {
       matchUpdateTypes: ["major"],
       semanticCommitType: "feat",
       commitMessagePrefix: "{{semanticCommitType}}({{semanticCommitScope}})!:",
