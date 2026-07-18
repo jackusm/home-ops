@@ -80,6 +80,19 @@ spec:
               limits:
                 memory: 512Mi
     defaultPodOptions:
+      # Hard anti-affinity: never schedule two replicas on the same node.
+      # The scheduler will leave a replica Pending rather than co-locate,
+      # so the 2-replica count is only meaningful if >= 2 nodes are schedulable.
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - tg-s3-processor
+              topologyKey: kubernetes.io/hostname
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
