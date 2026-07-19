@@ -11,21 +11,21 @@ spec:
   values:
     controllers:
       tg-s3-processor:
-        type: deployment
-        replicas: 2
-        # NOTE: app-template flattens the Deployment strategy. `strategy`
-        # is just the type string; `rollingUpdate` (maxSurge/maxUnavailable)
-        # is a *sibling* key, NOT nested under strategy.
-        strategy: RollingUpdate
-        rollingUpdate:
-          # replicas == node count + hard anti-affinity means a default
-          # surge deadlocks: the new pod can't schedule until an old pod
-          # dies, but the old pod won't die until the new one is up.
-          # maxSurge: 0 forces terminate-before-create (frees the node first);
-          # maxUnavailable: 1 keeps >= 1 replica available throughout.
-          # Net: rollout walks 2 -> 1 -> 2, never co-located, never empty.
-          maxUnavailable: 1
-          maxSurge: 0
+        # DaemonSet: exactly one pod per schedulable node, by construction.
+        # This is what we actually want — "1 pod on every node, never
+        # co-located, auto-tracks node count" — with no replicas to tune and
+        # no podAntiAffinity (a DaemonSet can't place two pods on one node).
+        #
+        # Update strategy is ignored for DaemonSets per app-template docs;
+        # the cluster default (RollingUpdate, maxUnavailable: 1) updates one
+        # node at a time, so on a 2-node cluster >= 1 pod stays up.
+        #
+        # NOTE on the prior Deployment attempt: app-template's rollingUpdate
+        # block reads .surge / .unavailable (NOT .maxSurge / .maxUnavailable).
+        # The k8s-native key names silently dropped the whole block, leaving
+        # the default maxSurge:25% which surged a new pod before any old pod
+        # was killed -> hard anti-affinity deadlock on a 2-node cluster.
+        type: daemonset
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
@@ -92,19 +92,10 @@ spec:
               limits:
                 memory: 512Mi
     defaultPodOptions:
-      # Hard anti-affinity: never schedule two replicas on the same node.
-      # The scheduler will leave a replica Pending rather than co-locate,
-      # so the 2-replica count is only meaningful if >= 2 nodes are schedulable.
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app.kubernetes.io/instance
-                    operator: In
-                    values:
-                      - tg-s3-processor
-              topologyKey: kubernetes.io/hostname
+      # No podAntiAffinity needed: a DaemonSet places exactly one pod per
+      # node, so co-location is structurally impossible. DaemonSets also
+      # won't land on NoSchedule-tainted control-plane nodes unless we add
+      # tolerations, matching the old Deployment's scheduling surface.
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
