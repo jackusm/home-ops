@@ -13,7 +13,19 @@ spec:
       tg-s3-processor:
         type: deployment
         replicas: 2
+        # NOTE: app-template flattens the Deployment strategy. `strategy`
+        # is just the type string; `rollingUpdate` (maxSurge/maxUnavailable)
+        # is a *sibling* key, NOT nested under strategy.
         strategy: RollingUpdate
+        rollingUpdate:
+          # replicas == node count + hard anti-affinity means a default
+          # surge deadlocks: the new pod can't schedule until an old pod
+          # dies, but the old pod won't die until the new one is up.
+          # maxSurge: 0 forces terminate-before-create (frees the node first);
+          # maxUnavailable: 1 keeps >= 1 replica available throughout.
+          # Net: rollout walks 2 -> 1 -> 2, never co-located, never empty.
+          maxUnavailable: 1
+          maxSurge: 0
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
