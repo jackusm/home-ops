@@ -27,7 +27,7 @@ spec:
           app:
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.5
+              tag: 0.5.1
               pullPolicy: Always
             env:
               PORT: &port 3000
@@ -75,7 +75,7 @@ spec:
               capabilities: { drop: ["ALL"] }
             resources:
               requests:
-                cpu: 500m
+                cpu: 100m
                 memory: 256Mi
               limits:
                 memory: 512Mi
