@@ -39,7 +39,7 @@ spec:
           app:
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.5.2
+              tag: 0.5.3
               pullPolicy: Always
             env:
               PORT: &port 3000
