@@ -39,7 +39,7 @@ spec:
           app:
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.5.6
+              tag: 0.5.7
             env:
               PORT: &port 3000
               # PROCESSOR_ROUTE is the shared tunnel hostname the worker uses
