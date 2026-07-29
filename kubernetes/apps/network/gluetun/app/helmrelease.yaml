@@ -25,28 +25,57 @@ spec:
             env:
               TZ: Europe/London
               VPN_SERVICE_PROVIDER: protonvpn
-              FREE_ONLY: yes
+              FREE_ONLY: yes # gluetun's viper parser accepts yes/no AND on/off
               SERVER_COUNTRIES: "Netherlands,Norway,Poland,Romania,Switzerland"
               # --- HTTP proxy: the thing other pods dial ---
-              # Listens on :8888 by default. The proxy only binds AFTER the
-              # VPN tunnel is up, so a TCP probe on 8888 == "VPN ready".
               HTTPPROXY: "on"
               HTTPPROXY_LISTENING_ADDRESS: ":8888"
+              # CRITICAL: gluetun's firewall drops ALL inbound on eth0 by
+              # default. Without whitelisting 8888, the kubelet's probes AND
+              # tg-s3-processor's HTTP_PROXY traffic both get silently
+              # blackholed (i/o timeout, not connection refused). The gluetun
+              # wiki explicitly notes FIREWALL_INPUT_PORTS is "needed for
+              # Kubernetes sidecars". This whitelist is load-bearing for the
+              # entire use case, not just the probes.
+              FIREWALL_INPUT_PORTS: "8888"
             envFrom:
               - secretRef:
                   name: gluetun-secret # OPENVPN_USER, OPENVPN_PASSWORD
             probes:
-              liveness: &probes
+              # startupProbe gives the slow OpenVPN boot (~30-90s) a wide
+              # window WITHOUT liveness killing it. Until startup passes,
+              # liveness/readiness don't run at all. 30 failures x 10s = 5 min.
+              # NOTE: gluetun binds 8888 at STARTUP, before the tunnel is fully
+              # up, so TCP-8888-open means "proxy listener ready" rather than
+              # strictly "VPN established". gluetun self-heals the tunnel via
+              # its own internal healthcheck regardless.
+              startup:
                 enabled: true
                 custom: true
                 spec:
                   tcpSocket:
                     port: &proxyport 8888
-                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 30
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: *proxyport
                   periodSeconds: 10
                   timeoutSeconds: 3
                   failureThreshold: 3
-              readiness: *probes
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: *proxyport
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
             # gluetun needs NET_ADMIN to build the tunnel + iptables rules and
             # runs as root, so this container is the deliberate exception to the
             # repo's runAsNonRoot:65534 / drop-ALL norm. Do NOT add
@@ -55,11 +84,14 @@ spec:
               capabilities:
                 add: ["NET_ADMIN"]
             resources:
+              # 512Mi: gluetun spikes at boot writing /gluetun/servers.json
+              # with ~20,901 hardcoded servers + DNS-over-TLS cache. 256Mi
+              # got OOMKilled (exit 137) reproducibly during that load.
               requests:
                 cpu: 50m
-                memory: 128Mi
-              limits:
                 memory: 256Mi
+              limits:
+                memory: 512Mi
     defaultPodOptions:
       securityContext:
         runAsNonRoot: false
