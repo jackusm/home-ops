@@ -1,0 +1,74 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: gluetun
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: gluetun
+  interval: 1h
+  values:
+    controllers:
+      gluetun:
+        strategy: RollingUpdate
+        rollingUpdate:
+          surge: 0
+          unavailable: 1
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/qdm12/gluetun
+              tag: v3.41.1
+            env:
+              TZ: Europe/London
+              VPN_SERVICE_PROVIDER: protonvpn
+              FREE_ONLY: yes
+              SERVER_COUNTRIES: "Netherlands,Norway,Poland,Romania,Switzerland"
+              # --- HTTP proxy: the thing other pods dial ---
+              # Listens on :8888 by default. The proxy only binds AFTER the
+              # VPN tunnel is up, so a TCP probe on 8888 == "VPN ready".
+              HTTPPROXY: "on"
+              HTTPPROXY_LISTENING_ADDRESS: ":8888"
+            envFrom:
+              - secretRef:
+                  name: gluetun-secret # OPENVPN_USER, OPENVPN_PASSWORD
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: &proxyport 8888
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness: *probes
+            # gluetun needs NET_ADMIN to build the tunnel + iptables rules and
+            # runs as root, so this container is the deliberate exception to the
+            # repo's runAsNonRoot:65534 / drop-ALL norm. Do NOT add
+            # readOnlyRootFilesystem: gluetun writes to /gluetun and /tmp.
+            securityContext:
+              capabilities:
+                add: ["NET_ADMIN"]
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+    # ClusterIP Service (default type) == the k8s equivalent of compose's
+    # `127.0.0.1:8888:8888`: reachable from inside the cluster only, NOT from
+    # the host/LAN/internet. Other pods dial http://gluetun.network.svc.cluster.local:8888
+    service:
+      app:
+        ports:
+          httpproxy:
+            port: *proxyport
