@@ -29,25 +29,12 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
-          # --- processor (gotd MTProto file gateway) ---
-          # In the BotFleet DO architecture, the processor connects to the
-          # global BotFleet Durable Object over WebSocket for bot/rate-limit
-          # coordination. All pods load all bots; the DO replicates state.
-          # Traffic reaches the processor via the shared cloudflare-tunnel
-          # (single route tg-s3-processor.${SECRET_DOMAIN} -> k8s Service
-          # round-robin). No per-pod tunnel sidecar or init container.
           app:
             image:
               repository: docker.io/jackus/tg-s3_processor
-              tag: 0.7.4
+              tag: 0.7.5
             env:
               PORT: &port 3000
-              # PROCESSOR_ROUTE is the shared tunnel hostname the worker uses
-              # to reach any processor pod. The processor sends it at
-              # registration for backward compat but it is no longer
-              # load-bearing — the worker independently knows this via its own
-              # PROCESSOR_ROUTE var.
-              PROCESSOR_ROUTE: "tg-s3-processor.${SECRET_DOMAIN}"
             envFrom:
               - secretRef:
                   name: tg-s3-processor-secret
