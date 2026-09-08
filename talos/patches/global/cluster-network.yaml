@@ -1,0 +1,16 @@
+# Cluster-wide network configuration (Talos v1.14 document schema)
+---
+# Use custom pod/service subnets for Cilium (replaces the deprecated
+# cluster.network.podSubnets/serviceSubnets)
+apiVersion: v1alpha1
+kind: KubeNetworkConfig
+podSubnets:
+    - 10.42.0.0/16
+serviceSubnets:
+    - 10.43.0.0/16
+---
+# Disable the built-in flannel CNI to use Cilium instead
+# (no KubeFlannelCNIConfig document == cni: none)
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete

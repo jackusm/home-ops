@@ -1,21 +1,50 @@
+# Control plane Kubernetes component configuration (Talos v1.14 document schema)
+---
+# Allow regular pods to be scheduled on control plane nodes
+# (replaces the deprecated cluster.allowSchedulingOnControlPlanes)
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+taints:
+    node-role.kubernetes.io/control-plane:
+        $patch: delete
+---
+# Disable the default PodSecurity admission plugin
+# (replaces cluster.apiServer.admissionControl)
+apiVersion: v1alpha1
+kind: KubeAdmissionControlConfig
+name: PodSecurity
+$patch: delete
+---
+apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+extraArgs:
+    # https://kubernetes.io/docs/tasks/extend-kubernetes/configure-aggregation-layer/
+    enable-aggregator-routing: "true"
+---
+# kube-proxy is replaced by Cilium
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+enabled: false
+---
+# CoreDNS is replaced by ExternalDNS
+apiVersion: v1alpha1
+kind: KubeCoreDNSConfig
+enabled: false
+---
+apiVersion: v1alpha1
+kind: KubeControllerManagerConfig
+extraArgs:
+    bind-address: "0.0.0.0"
+---
+apiVersion: v1alpha1
+kind: KubeSchedulerConfig
+extraArgs:
+    bind-address: "0.0.0.0"
+---
+# etcd metrics endpoint for prometheus scraping (etcd is still configured in
+# the main v1alpha1 document)
+version: v1alpha1
 cluster:
-  allowSchedulingOnControlPlanes: true
-  apiServer:
-    admissionControl:
-      $$patch: delete
-    extraArgs:
-      # https://kubernetes.io/docs/tasks/extend-kubernetes/configure-aggregation-layer/
-      enable-aggregator-routing: true
-  controllerManager:
-    extraArgs:
-      bind-address: 0.0.0.0
-  coreDNS:
-    disabled: true
-  etcd:
-    extraArgs:
-      listen-metrics-urls: http://0.0.0.0:2381
-  proxy:
-    disabled: true
-  scheduler:
-    extraArgs:
-      bind-address: 0.0.0.0
+    etcd:
+        extraArgs:
+            listen-metrics-urls: http://0.0.0.0:2381
