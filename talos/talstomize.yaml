@@ -1,0 +1,66 @@
+---
+apiVersion: config.talstomize.dev/v1alpha1
+kind: Talstomize
+clusterName: kubernetes
+controlPlaneEndpoint: https://k8sep.${SECRET_DOMAIN}:6443
+kubernetesVersion: ${kubernetesVersion}
+secrets: ./talsecret.sops.yaml
+# Extra SANs added to both the kube-apiserver and per-machine certificates
+additionalSubjectAltNames: &sans
+  - "127.0.0.1"
+  - "k8sep.${SECRET_DOMAIN}"
+# factory.talos.dev schematic for the vanilla installer, tagged with the Talos
+# version from .env (kept in sync by renovate)
+installer:
+  image: "factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:${talosVersion}"
+# Global patches (applied to every node)
+patches:
+  - ./patches/global/cluster-network.yaml
+  - ./patches/global/machine-cri.yaml
+  - ./patches/global/machine-kubelet.yaml
+  - ./patches/global/machine-network.yaml
+  - ./patches/global/machine-sysctls.yaml
+  - ./patches/global/machine-time.yaml
+# Controller patches
+controlplanePatches:
+  - ./patches/controller/cluster.yaml
+  - ./patches/controller/machine-upgrades.yaml
+nodes:
+  hostslim001:
+    ip: 2.59.254.159
+    kind: controlplane
+    patches:
+      - machine:
+          install:
+            disk: /dev/vda
+      - machine:
+          network:
+            interfaces:
+              - deviceSelector:
+                  hardwareAddr: "00:16:3e:e7:99:9b"
+                dhcp: false
+                addresses:
+                  - "2.59.254.159/24"
+                routes:
+                  - gateway: "2.59.254.1"
+                    network: 0.0.0.0/0
+                mtu: 1500
+  deluxhost0001:
+    ip: 148.135.207.246
+    kind: worker
+    patches:
+      - machine:
+          install:
+            disk: /dev/vda
+      - machine:
+          network:
+            interfaces:
+              - deviceSelector:
+                  hardwareAddr: "00:10:65:3b:8a:c7"
+                dhcp: false
+                addresses:
+                  - "148.135.207.246/24"
+                routes:
+                  - gateway: "148.135.207.1"
+                    network: 0.0.0.0/0
+                mtu: 1500

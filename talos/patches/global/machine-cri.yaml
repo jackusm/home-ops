@@ -1,0 +1,10 @@
+# CRI containerd tuning (Talos v1.14 CRICustomizationConfig document, replaces
+# the legacy /etc/cri/conf.d/20-customization.part machine file)
+apiVersion: v1alpha1
+kind: CRICustomizationConfig
+name: 20-customization.part
+content: |
+  [plugins."io.containerd.cri.v1.images"]
+    discard_unpacked_layers = false
+  [plugins."io.containerd.cri.v1.runtime"]
+    device_ownership_from_security_context = true

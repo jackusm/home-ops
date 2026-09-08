@@ -7,16 +7,24 @@ tasks:
     desc: Bootstrap the Talos cluster
     dir: '{{.TALOS_DIR}}'
     cmds:
-      - '[ -f talsecret.sops.yaml ] || talhelper gensecret | sops --filename-override talos/talsecret.sops.yaml --encrypt /dev/stdin > talsecret.sops.yaml'
-      - talhelper genconfig
-      - talhelper gencommand apply --extra-flags="--insecure" | bash
-      - until talhelper gencommand bootstrap | bash; do sleep 10; done
-      - until talhelper gencommand kubeconfig --extra-flags="{{.ROOT_DIR}} --force" | bash; do sleep 10; done
+      - cmd: |
+          [ -f talsecret.sops.yaml ] || {
+            talosctl gen secrets -o talsecret.yaml
+            sops --filename-override talos/talsecret.sops.yaml --encrypt talsecret.yaml > talsecret.sops.yaml
+            rm -f talsecret.yaml
+          }
+      - talstomize build . -o clusterconfig
+      - talstomize apply -f . -- --insecure
+      - until talosctl bootstrap --nodes {{.CP_IP}}; do sleep 10; done
+      - until talosctl kubeconfig {{.ROOT_DIR}} --force --nodes {{.CP_IP}}; do sleep 10; done
+    vars:
+      CP_IP:
+        sh: yq '.nodes | to_entries() | .[] | select(.value.kind == "controlplane") | .value.ip' {{.TALOS_DIR}}/talstomize.yaml | head -1
     preconditions:
       - test -f {{.ROOT_DIR}}/.sops.yaml
       - test -f {{.SOPS_AGE_KEY_FILE}}
-      - test -f {{.TALOS_DIR}}/talconfig.yaml
-      - which talhelper talosctl sops
+      - test -f {{.TALOS_DIR}}/talstomize.yaml
+      - which talstomize talosctl sops yq
 
   apps:
     desc: Bootstrap apps into the Talos cluster

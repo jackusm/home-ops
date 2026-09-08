@@ -1,4 +1,6 @@
-machine:
-  kubelet:
-    extraConfig:
-      serializeImagePulls: false
+# Kubelet tuning (Talos v1.14 KubeletConfig document, replaces the deprecated
+# machine.kubelet.extraConfig)
+apiVersion: v1alpha1
+kind: KubeletConfig
+config:
+    serializeImagePulls: false
