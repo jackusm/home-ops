@@ -1,3 +1,2 @@
-talosconfig
-kubernetes-deluxhost0001.yaml
-kubernetes-hostslim001.yaml
+*
+!.gitignore
