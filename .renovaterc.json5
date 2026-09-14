@@ -30,6 +30,11 @@
   },
   packageRules: [
     {
+      description: "Disable digest pinning where unsupported",
+      matchManagers: ["helmfile", "regex"],
+      pinDigests: false,
+    },
+    {
       description: "Override Helmfile Dependency Name",
       matchDatasources: ["docker"],
       matchManagers: ["helmfile"],
