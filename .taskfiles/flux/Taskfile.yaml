@@ -1,0 +1,89 @@
+---
+version: '3'
+
+tasks:
+
+  why:
+    desc: Failure-only view — everything failing (Flux resources + any CR with failed status conditions), with events explaining why
+    cmd: |
+      # ponytail: condition-type heuristic (Ready/Synced/Healthy/Available/Failed); add types if an operator uses exotic ones
+      flux_failed=$(flux get all --all-namespaces --no-header | awk '$4 != "True" && $5 != "True"')
+      cr_failed=$(kubectl get crds --no-headers -o custom-columns=NAME:.metadata.name | cut -d. -f1 | while read -r crd; do
+        kubectl get "$crd" --all-namespaces -o json 2>/dev/null \
+          | yq -r -N '.items[] | select((.status.conditions // []) | any_c(((.type | test("^(Ready|Synced|Healthy|Available)$")) and .status == "False") or (.type == "Failed" and .status == "True"))) | [.metadata.namespace, .kind, .metadata.name] | @tsv' \
+          || true
+      done)
+      if [ -z "$flux_failed" ] && [ -z "$cr_failed" ]; then
+        echo "✓ cluster matches gitops state"
+        exit 0
+      fi
+      if [ -n "$flux_failed" ]; then
+        echo "── Flux resources not Ready ──"
+        printf '%s\n' "$flux_failed"
+        printf '%s\n' "$flux_failed" | while read -r ns name rev susp ready msg; do
+          [ -n "$ns" ] || continue
+          echo "▸ $ns/$name — $msg"
+          kubectl get events -n "$ns" --field-selector "involvedObject.name=$name" --sort-by=.lastTimestamp \
+            -o custom-columns='LAST:.lastTimestamp,TYPE:.type,REASON:.reason,MSG:.message' 2>/dev/null | tail -5
+          echo
+        done
+      fi
+      if [ -n "$cr_failed" ]; then
+        echo "── custom resources with failed conditions ──"
+        printf '%s\n' "$cr_failed" | while IFS=$'\t' read -r ns kind name; do
+          [ -n "$ns" ] || continue
+          msg=$(kubectl get "$kind" "$name" -n "$ns" -o json 2>/dev/null \
+            | yq -r -N '(.status.conditions // [])[] | select(((.type | test("^(Ready|Synced|Healthy|Available)$")) and .status == "False") or (.type == "Failed" and .status == "True")) | .type + "=" + .status + ": " + (.message // .reason // "")' \
+            | head -3)
+          echo "▸ $ns/$kind/$name — $msg"
+          kubectl get events -n "$ns" --field-selector "involvedObject.name=$name" --sort-by=.lastTimestamp \
+            -o custom-columns='LAST:.lastTimestamp,TYPE:.type,REASON:.reason,MSG:.message' 2>/dev/null | tail -5
+          echo
+        done
+      fi
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which flux kubectl yq
+
+  force:
+    desc: Pull latest git, reconcile all, then force+reset failed HelmReleases
+    cmds:
+      - flux reconcile kustomization flux-system --with-source
+      - |
+        failed=$(flux get helmreleases --all-namespaces --no-header | awk '$4 == "False" && ($5 == "False" || $5 == "Unknown") {print $1, $2}')
+        if [ -n "$failed" ]; then
+          printf '%s\n' "$failed" | while read -r ns name; do
+            flux reconcile helmrelease "$name" --namespace "$ns" --force --reset
+          done
+        else
+          echo "no failed HelmReleases"
+        fi
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which flux kubectl
+
+  diff:
+    desc: Server-side diff of local working tree vs cluster (exit 1 = drift found)
+    cmd: flux diff kustomization flux-system --path {{.KUBERNETES_DIR}}/flux/cluster --recursive --local-sources GitRepository/flux-system/flux-system={{.KUBERNETES_DIR}}
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which flux
+
+  tuppr-status:
+    desc: Show tuppr upgrade state, events and completed/failed nodes
+    cmds:
+      - kubectl describe talosupgrade talos -n system-upgrade
+      - kubectl describe kubernetesupgrade kubernetes -n system-upgrade
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which kubectl
+
+  tuppr-retry:
+    desc: Reset failed tuppr upgrades to retry from scratch (reboots nodes)
+    prompt: This will restart Talos/Kubernetes upgrades — nodes will drain and powercycle. Continue?
+    cmds:
+      - kubectl annotate talosupgrade talos tuppr.home-operations.com/reset="$(date)" -n system-upgrade
+      - kubectl annotate kubernetesupgrade kubernetes tuppr.home-operations.com/reset="$(date)" -n system-upgrade
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which kubectl

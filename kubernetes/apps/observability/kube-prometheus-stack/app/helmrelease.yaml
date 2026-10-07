@@ -1,0 +1,86 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: kube-prometheus-stack
+  interval: 1h
+  values:
+    # CRDs are installed once by bootstrap/helmfile.d/00-crds.yaml
+    crds:
+      enabled: false
+
+    defaultRules:
+      create: true
+      rules:
+        etcd: false
+        kubeControllerManager: false
+        kubeProxy: false
+        kubeScheduler: false
+
+    alertmanager:
+      alertmanagerSpec:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        # Pick up AlertmanagerConfig CRs from this repo regardless of release labels
+        alertmanagerConfigSelector: {}
+        # Don't scope AlertmanagerConfigs to their namespace only
+        alertmanagerConfigMatcherStrategy:
+          type: None
+
+    # dashboards are deployed as ConfigMaps for grafana-operator to ingest
+    grafana:
+      enabled: false
+      forceDeployDashboards: true
+      operator:
+        dashboardsConfigMapRefEnabled: true
+        matchLabels:
+          dashboards: grafana
+        folder: kps
+
+    # talos: control-plane components not scrapeable as in kubeadm clusters
+    kubeControllerManager:
+      enabled: false
+    kubeEtcd:
+      enabled: false
+    kubeProxy:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+
+    prometheus:
+      prometheusSpec:
+        retention: 10d
+        retentionSize: 10GiB
+        scrapeInterval: 1m
+        walCompression: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        probeSelectorNilUsesHelmValues: false
+        ruleSelectorNilUsesHelmValues: false
+        scrapeConfigSelectorNilUsesHelmValues: false
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 15Gi
+
+  valuesFrom:
+    # kube-state-metrics RBAC + customResourceState metrics for Flux resources
+    - kind: ConfigMap
+      name: flux-metrics-configmap
+      valuesKey: flux-metrics.yaml

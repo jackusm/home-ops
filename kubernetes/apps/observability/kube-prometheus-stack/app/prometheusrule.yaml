@@ -1,0 +1,34 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: custom-rules
+spec:
+  groups:
+    - name: flux
+      rules:
+        - alert: FluxResourceNotReady
+          annotations:
+            summary: >-
+              {{ $labels.exported_namespace }}/{{ $labels.name }} ({{ $labels.customresource_kind }}) has not been Ready for over 30 minutes
+          expr: |
+            max by (customresource_kind, exported_namespace, name) (
+              gotk_resource_info{ready="False", suspended!="true"}
+            ) == 1
+          for: 30m
+          labels:
+            severity: critical
+
+    - name: workloads
+      rules:
+        - alert: OomKilled
+          annotations:
+            summary: >-
+              {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} was OOM killed
+          expr: |
+            (increase(kube_pod_container_status_restarts_total[10m]) >= 2)
+              and on(namespace, pod, container)
+            (kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1)
+          labels:
+            severity: critical

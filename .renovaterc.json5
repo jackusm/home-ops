@@ -58,6 +58,13 @@
       overrideDepName: '{{packageName}}',
     },
     {
+      description: 'Group kube-prometheus-stack (chart + CRDs)',
+      groupName: 'kube-prometheus-stack',
+      matchPackageNames: [
+        'ghcr.io/prometheus-community/charts/kube-prometheus-stack',
+      ],
+    },
+    {
       description: 'Flux Operator Group',
       groupName: 'flux-operator',
       matchDatasources: [
