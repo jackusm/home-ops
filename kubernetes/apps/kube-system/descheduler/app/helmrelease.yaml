@@ -11,6 +11,16 @@ spec:
   interval: 1h
   values:
     kind: Deployment
+    # Chart default is 500m/256Mi — 26% of hostslim001's 1950m allocatable for a
+    # pod that idles at ~24m and loops every 5 minutes. Requests only affect
+    # scheduling, so a small request cannot throttle it; no CPU limit so bursts
+    # are free.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
     deschedulerPolicyAPIVersion: descheduler/v1alpha2
     deschedulerPolicy:
       metricsProviders:

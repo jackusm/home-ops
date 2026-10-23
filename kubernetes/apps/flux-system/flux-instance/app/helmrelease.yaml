@@ -57,6 +57,35 @@ spec:
             target:
               kind: Deployment
               name: (kustomize-controller|helm-controller|source-controller)
+          - # Right-size requests: 100m each was 2-4x observed use (24-54m) on a
+            # 1950m node. Requests only gate scheduling; no CPU limit is set.
+            patch: |-
+              - op: replace
+                path: /spec/template/spec/containers/0/resources/requests/cpu
+                value: 50m
+            target:
+              kind: Deployment
+              name: (source-controller|kustomize-controller|helm-controller|notification-controller)
+          - # A 1s probe timeout turns a loaded node into a restart loop, and a
+            # restarting source-controller means every Kustomization fails to
+            # download its artifact ("connect: connection refused" on the
+            # service ClusterIP) until the probe backs off.
+            patch: |-
+              - op: replace
+                path: /spec/template/spec/containers/0/livenessProbe/timeoutSeconds
+                value: 5
+              - op: replace
+                path: /spec/template/spec/containers/0/livenessProbe/failureThreshold
+                value: 5
+              - op: replace
+                path: /spec/template/spec/containers/0/readinessProbe/timeoutSeconds
+                value: 5
+              - op: replace
+                path: /spec/template/spec/containers/0/readinessProbe/failureThreshold
+                value: 5
+            target:
+              kind: Deployment
+              name: (source-controller|kustomize-controller|helm-controller|notification-controller)
           - # Enable in-memory kustomize builds
             patch: |
               - op: add

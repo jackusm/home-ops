@@ -72,9 +72,10 @@ spec:
               readOnlyRootFilesystem: true
               capabilities: { drop: ["ALL"] }
             resources:
+              # DaemonSet: this cost is paid on every node.
               requests:
-                cpu: 100m
-                memory: 256Mi
+                cpu: 25m
+                memory: 128Mi
               limits:
                 memory: 512Mi
     defaultPodOptions:

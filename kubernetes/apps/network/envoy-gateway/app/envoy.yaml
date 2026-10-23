@@ -17,6 +17,9 @@ spec:
           resources:
             requests:
               cpu: 100m
+              # No memory request was set, so the gateway defaulted to ~1Gi per
+              # replica (2 replicas = 2.1Gi of deluxhost0001's 7.2Gi).
+              memory: 256Mi
             limits:
               memory: 1Gi
       envoyService:

@@ -11,6 +11,34 @@ spec:
   interval: 1h
   values:
     replicaCount: 2
+    # BestEffort pods are the first eviction candidates on a loaded node, and
+    # these were being evicted mid-upgrade.
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
+    # Chart defaults are 1s timeouts. On a busy node the probe exceeds that,
+    # the container is killed, and with it goes the validating webhook endpoint
+    # ("no endpoints available for service tuppr-webhook-service"), which then
+    # blocks every TalosUpgrade/KubernetesUpgrade update including Tuppr's own.
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: metrics
+      initialDelaySeconds: 15
+      periodSeconds: 20
+      timeoutSeconds: 5
+      failureThreshold: 5
+    readinessProbe:
+      httpGet:
+        path: /readyz
+        port: metrics
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
     monitoring:
       serviceMonitor:
         enabled: true

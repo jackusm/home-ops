@@ -10,3 +10,8 @@ spec:
     version: v1.14.4
   policy:
     rebootMode: powercycle
+    # Two nodes, one of them the control plane: draining leaves nowhere for the
+    # evicted pods to go, and with the node cordoned the upgrade job can never
+    # see it Ready again -> the upgrade never finishes and the node is never
+    # uncordoned. Take the downtime instead of deadlocking.
+    nodrain: true

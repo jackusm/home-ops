@@ -19,3 +19,8 @@ spec:
       enabled: true
     serviceMonitor:
       enabled: true
+    # Chart default 100m/200Mi vs ~40m actual
+    resources:
+      requests:
+        cpu: 25m
+        memory: 100Mi

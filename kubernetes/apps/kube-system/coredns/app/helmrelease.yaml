@@ -19,6 +19,11 @@ spec:
       name: kube-dns
       clusterIP: "10.43.0.10"
     replicaCount: 2
+    # Chart default 100m/128Mi per replica vs ~5m actual
+    resources:
+      requests:
+        cpu: 25m
+        memory: 70Mi
     servers:
       - zones:
           - zone: .
