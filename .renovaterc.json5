@@ -11,6 +11,9 @@
   ],
   dependencyDashboard: true,
   dependencyDashboardTitle: 'Renovate Dashboard :robot:',
+  lockFileMaintenance: {
+    enabled: false,
+  },
   schedule: [
     'every weekend',
   ],
