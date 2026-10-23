@@ -4,15 +4,15 @@ kind: Talstomize
 clusterName: kubernetes
 controlPlaneEndpoint: https://k8sep.${SECRET_DOMAIN}:6443
 kubernetesVersion: ${kubernetesVersion}
+talosVersion: ${talosVersion}
 secrets: ./talsecret.sops.yaml
 # Extra SANs added to both the kube-apiserver and per-machine certificates
 additionalSubjectAltNames: &sans
   - "127.0.0.1"
   - "k8sep.${SECRET_DOMAIN}"
-# factory.talos.dev schematic for the vanilla installer, tagged with the Talos
-# version from .env (kept in sync by renovate)
-installer:
-  image: "factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:${talosVersion}"
+# Installer left unset: talstomize uses the vanilla Image Factory schematic
+# (376567988ad...b4ba, same as talosctl gen config) tagged with talosVersion.
+# Set `installer.schematic` here only to add system extensions / kernel args.
 # Global patches (applied to every node)
 patches:
   - ./patches/global/cluster-network.yaml

@@ -38,17 +38,19 @@ tasks:
     dir: '{{.TALOS_DIR}}'
     cmd: talosctl upgrade --nodes {{.IP}} --image="{{.TALOS_IMAGE}}" --timeout=10m
     vars:
+      NODE:
+        sh: yq '.nodes | to_entries() | .[] | select(.value.ip == "{{.IP}}") | .key' {{.TALOS_DIR}}/talstomize.yaml
       TALOS_IMAGE:
-        sh: |
-          . {{.TALOS_DIR}}/.env
-          yq '.installer.image' {{.TALOS_DIR}}/talstomize.yaml | sed "s/\${talosVersion}/${talosVersion}/"
+        sh: yq '.machine.install.image' {{.TALOS_DIR}}/clusterconfig/{{.NODE}}.yaml
     requires:
       vars: [IP]
     preconditions:
+      - sh: test -n "{{.NODE}}"
+        msg: No node found with IP={{.IP}} in talstomize.yaml
       - talosctl --nodes {{.IP}} get machineconfig
       - talosctl config info
       - test -f {{.TALOSCONFIG}}
-      - test -f {{.TALOS_DIR}}/.env
+      - test -f {{.TALOS_DIR}}/clusterconfig/{{.NODE}}.yaml
       - which talosctl yq
 
   upgrade-k8s:
