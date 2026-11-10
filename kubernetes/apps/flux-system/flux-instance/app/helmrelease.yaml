@@ -11,7 +11,8 @@ spec:
   values:
     instance:
       distribution:
-        artifact: oci://ghcr.io/controlplaneio-fluxcd/flux-operator-manifests:v0.62.1
+        artifact: "oci://ghcr.io/controlplaneio-fluxcd/\
+          flux-operator-manifests:v0.62.1"
       cluster:
         networkPolicy: false
       components:
@@ -65,27 +66,31 @@ spec:
                 value: 50m
             target:
               kind: Deployment
-              name: (source-controller|kustomize-controller|helm-controller|notification-controller)
+              name: (source|kustomize|helm|notification)-controller
           - # A 1s probe timeout turns a loaded node into a restart loop, and a
             # restarting source-controller means every Kustomization fails to
             # download its artifact ("connect: connection refused" on the
             # service ClusterIP) until the probe backs off.
             patch: |-
               - op: replace
-                path: /spec/template/spec/containers/0/livenessProbe/timeoutSeconds
+                path: "/spec/template/spec/containers/0/\
+                  livenessProbe/timeoutSeconds"
                 value: 5
               - op: replace
-                path: /spec/template/spec/containers/0/livenessProbe/failureThreshold
+                path: "/spec/template/spec/containers/0/\
+                  livenessProbe/failureThreshold"
                 value: 5
               - op: replace
-                path: /spec/template/spec/containers/0/readinessProbe/timeoutSeconds
+                path: "/spec/template/spec/containers/0/\
+                  readinessProbe/timeoutSeconds"
                 value: 5
               - op: replace
-                path: /spec/template/spec/containers/0/readinessProbe/failureThreshold
+                path: "/spec/template/spec/containers/0/\
+                  readinessProbe/failureThreshold"
                 value: 5
             target:
               kind: Deployment
-              name: (source-controller|kustomize-controller|helm-controller|notification-controller)
+              name: (source|kustomize|helm|notification)-controller
           - # Enable in-memory kustomize builds
             patch: |
               - op: add
@@ -144,7 +149,8 @@ spec:
             target:
               kind: Deployment
               name: kustomize-controller
-          - # Watch configmaps and secrets attached to HelmReleases and Kustomizations
+          - # Watch configmaps and secrets attached to HelmReleases and
+            # Kustomizations
             patch: |-
               - op: add
                 path: /spec/template/spec/containers/0/args/-
