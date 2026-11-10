@@ -79,6 +79,17 @@ spec:
                 requests:
                   storage: 15Gi
 
+    # kube-state-metrics /livez hits the API; on the worker, brownouts make
+    # that path stall >liveness budget and kubelet kills it (596 restarts).
+    # Give the probe enough budget to ride out short API stalls.
+    kube-state-metrics:
+      livenessProbe:
+        timeoutSeconds: 10
+        failureThreshold: 10
+      readinessProbe:
+        timeoutSeconds: 10
+        failureThreshold: 10
+
   valuesFrom:
     # kube-state-metrics RBAC + customResourceState metrics for Flux resources
     - kind: ConfigMap
