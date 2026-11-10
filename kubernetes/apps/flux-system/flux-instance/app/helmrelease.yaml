@@ -30,6 +30,25 @@ spec:
           app.kubernetes.io/name: flux
       kustomize:
         patches:
+          # Leader-election tuning: default renew deadline exits the
+          # controller whenever a worker<->API brownout outlasts it, and the
+          # resulting restart storm starves the apiserver. Single-replica
+          # deployments have no standby to fail over to, so ride out flaps.
+          # NOTE: flags are --leader-election-*, NOT --leader-elect-* (those
+          # are rejected as unknown); controllers have no env-var config.
+          - patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/args/-
+                value: --leader-election-lease-duration=120s
+              - op: add
+                path: /spec/template/spec/containers/0/args/-
+                value: --leader-election-renew-deadline=90s
+              - op: add
+                path: /spec/template/spec/containers/0/args/-
+                value: --leader-election-retry-period=5s
+            target:
+              kind: Deployment
+              name: (source|kustomize|helm|notification)-controller
           - # Increase the number of workers
             patch: |
               - op: add
