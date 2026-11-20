@@ -41,7 +41,9 @@ tasks:
       NODE:
         sh: yq '.nodes | to_entries() | .[] | select(.value.ip == "{{.IP}}") | .key' {{.TALOS_DIR}}/talstomize.yaml
       TALOS_IMAGE:
-        sh: yq '.machine.install.image' {{.TALOS_DIR}}/clusterconfig/{{.NODE}}.yaml
+        # configs are multi-document (v1alpha1 config + structured docs);
+        # take the first document only or yq appends a null per extra doc
+        sh: yq 'select(di == 0) | .machine.install.image' {{.TALOS_DIR}}/clusterconfig/{{.NODE}}.yaml
     requires:
       vars: [IP]
     preconditions:

@@ -1,0 +1,30 @@
+---
+# tiered SCs: replica count vs node disk budget
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-single
+provisioner: driver.longhorn.io
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "1"  # lossy/regenerable data (metrics), or CNPG-managed data
+  staleReplicaTimeout: "2880"
+  fromBackup: ""
+  fsType: "ext4"
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-standard
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: driver.longhorn.io
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "2"  # survives one node loss
+  staleReplicaTimeout: "2880"
+  fromBackup: ""
+  fsType: "ext4"
+  recurringJobSelector: '[{ "name": "backup-daily", "isGroup": false }]'

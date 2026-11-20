@@ -34,9 +34,9 @@ via its `grafana.internal/instance: grafana` label).
 3. Grafana access (no HTTPRoute yet, intentionally): `kubectl -n observability port-forward deploy/grafana 3000`
    → http://localhost:3000 (admin + anonymous read enabled).
 
-CRDs (`monitoring.coreos.com` etc.) are owned by `bootstrap/helmfile.d/00-crds.yaml` — the chart here
-runs with `crds.enabled: false`, so keep that file's version in sync with `app/ocirepository.yaml`
-(your renovate config already bumps both).
+CRDs (`monitoring.coreos.com` etc.) ship in the chart's `crds` subchart and upgrade with the release
+(chart default `crds.enabled: true`), so the `cluster-apps` `CreateReplace` patch keeps them current —
+nothing to sync by hand.
 
 ## Notes / deliberate choices
 

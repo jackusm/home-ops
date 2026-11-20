@@ -1,12 +1,5 @@
 # Control plane Kubernetes component configuration (Talos v1.14 document schema)
 ---
-# Allow regular pods to be scheduled on control plane nodes
-# (replaces the deprecated cluster.allowSchedulingOnControlPlanes)
-apiVersion: v1alpha1
-kind: KubeNodeConfig
-taints:
-    node-role.kubernetes.io/control-plane:
-        $patch: delete
 ---
 # Disable the default PodSecurity admission plugin
 # (replaces cluster.apiServer.admissionControl)

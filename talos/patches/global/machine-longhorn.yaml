@@ -1,0 +1,10 @@
+---
+# Longhorn replica data lives on the ephemeral disk. Talos 1.14 removed the
+# kubelet extraMounts mechanism (mutually exclusive with the KubeletConfig
+# document, no replacement field), so use a directory-type user volume instead:
+# Talos bind-mounts /var/mnt/longhorn and propagates it into the kubelet.
+# Pointed at via defaultSettings.defaultDataPath in the Longhorn HelmRelease.
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: longhorn
+volumeType: directory

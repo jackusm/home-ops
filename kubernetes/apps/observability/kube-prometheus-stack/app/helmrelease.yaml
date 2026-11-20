@@ -10,10 +10,6 @@ spec:
     name: kube-prometheus-stack
   interval: 1h
   values:
-    # CRDs are installed once by bootstrap/helmfile.d/00-crds.yaml
-    crds:
-      enabled: false
-
     defaultRules:
       create: true
       rules:
@@ -29,7 +25,8 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
-        # Pick up AlertmanagerConfig CRs from this repo regardless of release labels
+        # Pick up AlertmanagerConfig CRs from this repo regardless
+        # of release labels
         alertmanagerConfigSelector: {}
         # Don't scope AlertmanagerConfigs to their namespace only
         alertmanagerConfigMatcherStrategy:
@@ -75,6 +72,7 @@ spec:
             spec:
               accessModes:
                 - ReadWriteOnce
+              storageClassName: longhorn-single
               resources:
                 requests:
                   storage: 15Gi

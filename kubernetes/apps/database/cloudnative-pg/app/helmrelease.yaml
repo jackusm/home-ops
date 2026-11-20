@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cloudnative-pg
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: cloudnative-pg
+      # renovate: datasource=helm depName=cloudnative-pg registryUrl=https://cloudnative-pg.github.io/charts
+      version: 0.29.1
+      sourceRef:
+        kind: HelmRepository
+        name: cloudnative-pg
+      interval: 15m
+  values:
+    crds:
+      create: true
+    monitoring:
+      podMonitorEnabled: true

@@ -1,0 +1,32 @@
+---
+# yaml-language-server: $schema=https://datreeio.github.io/CRDs-catalog/postgresql.cnpg.io/cluster_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cnpg-main
+spec:
+  # single instance; scale to 3 when the cluster grows
+  instances: 1
+  primaryUpdateStrategy: unsupervised
+  # pin to the worker node: control-plane nodes stay stateless;
+  # revisit as the cluster grows
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - deluxhost0001
+  storage:
+    size: 10Gi
+    storageClass: longhorn-single
+  monitoring:
+    enablePodMonitor: true
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      enabled: true
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: postgres-main-barman

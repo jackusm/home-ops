@@ -1,0 +1,29 @@
+# THE Longhorn backup S3 identity (independent of CNPG's).
+# Rotate values with: sops --in-place backup-vars.sops.yaml (re-encrypts on save)
+# Bucket must be unique across all customers if the provider enforces it.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: longhorn-backup-vars
+stringData:
+  S3_BUCKET: ENC[AES256_GCM,data:+YwcGK6CwHRBJQIg,iv:wkA4MGlGXxwiPyuHndzBH+4tZQcsD+BHnGMKvf5Uj4Y=,tag:zfcdnFL+XUXxMUgkpsbSog==,type:str]
+  S3_REGION: ENC[AES256_GCM,data:iAMg8bW7pk7U,iv:nIWp4ICGFH2S3JuQgf+ILPJHFRnp9n4KEayF3Fc+AW8=,tag:s283SdPuoBXKNhbetF3+gg==,type:str]
+  S3_ENDPOINT: ENC[AES256_GCM,data:tWg5lJ6n2EB4EETooKLqCJCweHLIjjbp,iv:0TbnoT8iJ8JVocsSKXjB4p8hJxBISUd7pbnqLMG21oY=,tag:sxDQn7ZSu3z2vW5uInBlCQ==,type:str]
+  S3_ACCESS_KEY_ID: ENC[AES256_GCM,data:04QxSTMyiWlY+dLSkq8f8lgbYQyIbBG2TpnuaO6dwjM=,iv:Bv8j5Ekb2J8gOTxiXaIZ9onmcMmDzKhL+8vaCtsgBKo=,tag:MwRe7oEl1FRcJ0Q0bDzAqw==,type:str]
+  S3_SECRET_ACCESS_KEY: ENC[AES256_GCM,data:hA2MXrAg//ZK3asXkHAo6oQ/biPR2Ue2NwO+pKHPOsE=,iv:MFhECW9nG9hTolPYRWxajba1Yha3il9IZn1eF3UT1Q4=,tag:OYb7RkrJaK63wQxFbVNsuQ==,type:str]
+sops:
+  age:
+    - enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAxZ3NzdXdFZkRGNzVwTFJs
+        TTh1UDZlZzJRSWdaQmNzeDBZNHU3Y2RicGg0CmVuTHhIVWlDdDk5S3ZMY29qV1U0
+        dnV1b2xPQkJjblJHbGZQUDJRZlRQRVkKLS0tIE1oSmtFY0l5N0VDOVBLLzNHcGp0
+        b0pqcVp0OHgwQ043SHYxbEpXRytNUjQKmhdlVk+ydqzBHgh8sc7VZjlbyjP+GArB
+        dDyLGH5GHVcFGGFgxoxfxKmXdllGNr2e7TcM3XssmVa6aCdgDc4/Kg==
+        -----END AGE ENCRYPTED FILE-----
+      recipient: age1658d87m9qz4fmvlqprxjr4xen79hule9pww4y54ah0kr75lw9suswy0ux7
+  encrypted_regex: ^(data|stringData)$
+  lastmodified: "2026-11-19T21:15:49Z"
+  mac: ENC[AES256_GCM,data:FQWOeqYLb3YRpkrIzeG0difqzkmKcNsLimH2FZYW9lFmgHVtSFad3oUvDqqMwttdLdwBb43vbAlO7eNeNa8rADV1kH5VXMT1GiROuEvhYx2Khnh5hWr5SQ09oypTNsi+sTuJXCzt2+x4nZZLt9Jjew4qGLViX6Q2OfMnowjUP+c=,iv:fsxbytC1y6TqnIZVYd+xv+QLilxAt/wr1cY/716Vrzs=,tag:egNThN6KMTLebFhp8QbSLA==,type:str]
+  mac_only_encrypted: true
+  version: 3.13.3

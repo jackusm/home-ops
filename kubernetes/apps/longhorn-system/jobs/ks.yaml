@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: longhorn-jobs
+spec:
+  # RecurringJob CRDs ship with the longhorn chart, so these CRs can only
+  # apply after the chart KS installs; a same-KS placement deadlocks on
+  # first install (dry-run runs before the HelmRelease is applied)
+  dependsOn:
+    - name: longhorn
+  interval: 1h
+  path: ./kubernetes/apps/longhorn-system/jobs/app
+  prune: true
+  retryInterval: 2m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: longhorn-system
+  wait: false

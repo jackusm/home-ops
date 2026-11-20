@@ -1,0 +1,12 @@
+---
+# sops output is machine-managed: MAC lines exceed any sane width and
+# reflowing them corrupts the encryption envelope
+ignore: |
+  *.sops.yaml
+
+extends: default
+
+rules:
+  # yaml-language-server schema directives are unbreakable single lines
+  line-length:
+    max: 260

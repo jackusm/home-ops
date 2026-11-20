@@ -1,0 +1,12 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./helmrepository.yaml
+  - ./helmrelease.yaml
+  - ./storageclass.yaml
+  - ./volumesnapshotclass.yaml
+  # S3 identity template: values substituted at reconcile time from
+  # longhorn-backup-vars (one directory up). Nothing sensitive here.
+  - ./secret.yaml

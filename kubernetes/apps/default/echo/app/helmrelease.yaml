@@ -20,7 +20,7 @@ spec:
             env:
               HTTP_PORT: &port 80
               LOG_WITHOUT_NEWLINE: true
-              LOG_IGNORE_PATH: /healthz
+              LOG_IGNORE_PATH: /metrics|/healthz
               PROMETHEUS_ENABLED: true
             probes:
               liveness: &probes
@@ -28,7 +28,7 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /healthz
+                    path: /metrics
                     port: *port
                   initialDelaySeconds: 0
                   periodSeconds: 10
@@ -38,7 +38,7 @@ spec:
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
-              capabilities: { drop: ["ALL"] }
+              capabilities: {drop: ["ALL"]}
             resources:
               requests:
                 cpu: 10m

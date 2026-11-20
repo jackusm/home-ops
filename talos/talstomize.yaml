@@ -10,14 +10,24 @@ secrets: ./talsecret.sops.yaml
 additionalSubjectAltNames: &sans
   - "127.0.0.1"
   - "k8sep.${SECRET_DOMAIN}"
-# Installer left unset: talstomize uses the vanilla Image Factory schematic
-# (376567988ad...b4ba, same as talosctl gen config) tagged with talosVersion.
-# Set `installer.schematic` here only to add system extensions / kernel args.
+# Installer schematic adds iscsi-tools + util-linux-tools (required by Longhorn)
+# plus qemu-guest-agent; talstomize registers it with the factory at build time
+# (POST /schematics); this exact set hashes to 88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
+# (same as cypr0/k8s-home) and the image is tagged with talosVersion.
+installer:
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/iscsi-tools
+          - siderolabs/qemu-guest-agent
+          - siderolabs/util-linux-tools
 # Global patches (applied to every node)
 patches:
   - ./patches/global/cluster-network.yaml
   - ./patches/global/machine-cri.yaml
   - ./patches/global/machine-kubelet.yaml
+  - ./patches/global/machine-longhorn.yaml
   - ./patches/global/machine-network.yaml
   - ./patches/global/machine-sysctls.yaml
   - ./patches/global/machine-time.yaml
