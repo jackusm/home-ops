@@ -11,4 +11,5 @@ resources:
   - ./echo/ks.yaml
   - ./postgres/ks.yaml
   - ./postgres/backup-vars.sops.yaml
+  - ./postgres/teldrive-db-vars.sops.yaml
   - ./tg-s3-processor/ks.yaml

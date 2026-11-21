@@ -8,6 +8,9 @@ spec:
   # single instance; scale to 3 when the cluster grows
   instances: 1
   primaryUpdateStrategy: unsupervised
+  # pin PG18: pg_dump inside the pod must be >= the source server major when
+  # importing, and the compose teldrive source ships postgres:18
+  imageName: ghcr.io/cloudnative-pg/postgresql:18
   # pin to the worker node: control-plane nodes stay stateless;
   # revisit as the cluster grows
   affinity:
@@ -30,3 +33,29 @@ spec:
       isWALArchiver: true
       parameters:
         barmanObjectName: postgres-main-barman
+  bootstrap:
+    initdb:
+      # names mirror the compose source so the teldrive app URL is a drop-in:
+      # postgres://teldrive:<pw from secret cnpg-main-app>@cnpg-main-rw:5432/teldrive
+      database: teldrive
+      owner: teldrive
+      import:
+        type: microservice
+        databases:
+          - teldrive
+        source:
+          externalCluster: teldrive-source
+  # consumed once at bootstrap; bootstrap and externalClusters are immutable
+  # CRD fields — the block stays in git (inert) after the import completes
+  externalClusters:
+    - name: teldrive-source
+      connectionParameters:
+        host: ${SOURCE_DB_HOST}
+        port: "5432"
+        user: teldrive
+        dbname: teldrive
+        # compose postgres ships without TLS; use `require` if yours terminates it
+        sslmode: disable
+      password:
+        name: teldrive-source-superuser
+        key: password
