@@ -11,3 +11,17 @@ spec:
   values:
     serviceMonitor:
       create: true
+    # Chart renders no replicas; postRenderer makes git own the field
+    postRenderer:
+      kustomize:
+        patches:
+          - patch: |-
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: flux-operator
+              spec:
+                replicas: 1
+                template:
+                  spec:
+                    priorityClassName: system-cluster-critical

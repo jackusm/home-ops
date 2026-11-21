@@ -185,3 +185,11 @@ spec:
             target:
               kind: Deployment
               name: kustomize-controller
+          - # Raise kubelet eviction rank above Burstable pods
+            patch: |-
+              - op: add
+                path: /spec/template/spec/priorityClassName
+                value: system-cluster-critical
+            target:
+              kind: Deployment
+              name: (source|kustomize|helm|notification)-controller
