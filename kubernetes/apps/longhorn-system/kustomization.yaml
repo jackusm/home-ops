@@ -9,6 +9,6 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./backup-vars.sops.yaml
+  - ./externalsecret-backup-vars.yaml
   - ./ks.yaml
   - ./jobs/ks.yaml

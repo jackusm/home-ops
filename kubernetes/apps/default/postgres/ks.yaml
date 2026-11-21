@@ -28,4 +28,4 @@ spec:
         name: postgres-backup-vars
       # SOURCE_DB_HOST/PASSWORD for the one-shot teldrive import at bootstrap
       - kind: Secret
-        name: teldrive-db-vars
+        name: teldrive-source-superuser

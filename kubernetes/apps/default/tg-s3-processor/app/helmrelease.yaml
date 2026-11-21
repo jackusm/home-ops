@@ -26,8 +26,9 @@ spec:
         # the default maxSurge:25% which surged a new pod before any old pod
         # was killed -> hard anti-affinity deadlock on a 2-node cluster.
         type: daemonset
-        annotations:
-          reloader.stakater.com/auto: "true"
+        pod:
+          annotations:
+            reloader.stakater.com/auto: "true"
         containers:
           app:
             image:
@@ -35,6 +36,9 @@ spec:
               tag: 0.7.5@sha256:11669b43ff52502268a10fe7f90df703a720d6060b975ec870bfb4bed117f403
             env:
               PORT: &port 3000
+              # config, not secret material; explicit env wins over envFrom,
+              # so the stale placeholder key in the synced secret is ignored
+              WORKER_URL: "https://tg-s3.${SECRET_DOMAIN}"
             envFrom:
               - secretRef:
                   name: tg-s3-processor-secret
@@ -70,7 +74,7 @@ spec:
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
-              capabilities: { drop: ["ALL"] }
+              capabilities: {drop: ["ALL"]}
             resources:
               # DaemonSet: this cost is paid on every node.
               requests:

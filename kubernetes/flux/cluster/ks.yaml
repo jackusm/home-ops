@@ -7,6 +7,9 @@ metadata:
 spec:
   decryption:
     provider: sops
+  dependsOn:
+    - name: external-secrets-config
+      namespace: flux-system
   deletionPolicy: WaitForTermination
   interval: 1h
   path: ./kubernetes/apps

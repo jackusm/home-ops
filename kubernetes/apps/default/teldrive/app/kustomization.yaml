@@ -5,7 +5,7 @@ resources:
   # Decrypted in-place by this Kustomization (sops decryption is patched
   # onto every child Kustomization by the root cluster-apps ks) and read
   # by the container via envFrom — no text substitution involved.
-  - ./secret.sops.yaml
+  - ./externalsecret.yaml
   - ./helmrelease.yaml
   - ./httproute.yaml
   - ./ocirepository.yaml

@@ -1,0 +1,10 @@
+---
+# wires the flux/cluster tree: root Kustomizations + alerting webhook config
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./alert.yaml
+  - ./ks.yaml
+  - ./ks-eso.yaml
+  - ./ks-eso-config.yaml
+  - ./provider.yaml

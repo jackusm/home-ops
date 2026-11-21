@@ -1,0 +1,62 @@
+---
+# PKCS8 required by the bitwarden Rust SDK
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: bitwarden-selfsigned
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bitwarden-ca
+  namespace: cert-manager
+spec:
+  commonName: bitwarden-ca
+  duration: 87600h  # 10y
+  isCA: true
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: bitwarden-selfsigned
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 2048
+  secretName: bitwarden-ca
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: bitwarden-ca
+spec:
+  ca:
+    secretName: bitwarden-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bitwarden-sdk-server
+  namespace: external-secrets
+spec:
+  commonName: bitwarden-sdk-server
+  dnsNames:
+    - bitwarden-sdk-server
+    - bitwarden-sdk-server.external-secrets.svc
+    - bitwarden-sdk-server.external-secrets.svc.cluster.local
+    - localhost
+  duration: 2160h  # 90d
+  ipAddresses:
+    - 127.0.0.1
+    - ::1
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: bitwarden-ca
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 2048
+  renewBefore: 360h  # 15d
+  secretName: bitwarden-tls-certs

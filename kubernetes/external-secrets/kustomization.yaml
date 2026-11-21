@@ -1,0 +1,8 @@
+---
+# sdk-server needs its TLS cert at install time; helm-controller blocks on workload health
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./namespace.yaml
+  - ./tls
+  - ./external-secrets.yaml

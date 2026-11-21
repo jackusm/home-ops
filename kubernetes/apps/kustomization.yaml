@@ -1,0 +1,15 @@
+---
+# lists the groups that cluster-apps fans out into; each directory expands
+# its own kustomization.yaml (namespace + per-app Kustomization CRs)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./cert-manager
+  - ./database
+  - ./default
+  - ./flux-system
+  - ./kube-system
+  - ./longhorn-system
+  - ./network
+  - ./observability
+  - ./system-upgrade

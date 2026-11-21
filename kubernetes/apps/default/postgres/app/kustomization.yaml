@@ -9,4 +9,4 @@ resources:
   - ./scheduledbackup.yaml
   # S3 identity template: values substituted at reconcile time from
   # postgres-backup-vars (one directory up). Nothing sensitive here.
-  - ./secret.yaml
+  - ./externalsecret.yaml

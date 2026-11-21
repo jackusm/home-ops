@@ -17,8 +17,9 @@ spec:
         # coordinated cluster-wide; keep at least one workers-on instance
         # (or split API/worker controllers); and budget
         # database.max-connections as the AGGREGATE across all replicas.
-        annotations:
-          reloader.stakater.com/auto: "true"
+        pod:
+          annotations:
+            reloader.stakater.com/auto: "true"
         containers:
           app:
             image:

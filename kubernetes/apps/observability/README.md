@@ -23,11 +23,12 @@ via its `grafana.internal/instance: grafana` label).
 
 1. Pushover credentials: your **User Key** is on the [pushover.net dashboard](https://pushover.net/);
    create an **application** at <https://pushover.net/apps/build> to get an API token.
-   Then fill and encrypt the two secrets:
-   - `kubernetes/apps/observability/kube-prometheus-stack/app/alertmanager-secret.sops.yaml`
-   - `kubernetes/apps/observability/grafana-operator/instance/grafana-admin-secret.sops.yaml`
-   Each file has the exact `sops --encrypt --in-place <file>` command in a comment.
-   Do not push while any of them is still plaintext.
+   Store them in Bitwarden Secrets Manager (project `home-ops`) as two secrets:
+   - `PUSHOVER_USER_KEY` → consumed by `kube-prometheus-stack/app/externalsecret.yaml`
+   - `ALERTMANAGER_PUSHOVER_TOKEN` → same file
+   plus `grafana-admin-password` → consumed by `grafana-operator/instance/externalsecret.yaml`.
+   The ExternalSecrets materialize `alertmanager-secret` / `grafana-admin-password-secret` into
+   the cluster; nothing sensitive lives in git anymore.
 2. Push. Flux picks up `kubernetes/apps/observability/` automatically (subdirectories with a
    kustomization.yaml are auto-included by the `cluster-apps` Kustomization) and the new files in
    `kubernetes/flux/cluster/` (path has no kustomization.yaml → Flux auto-includes all YAML files).

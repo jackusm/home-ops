@@ -6,4 +6,4 @@ resources:
   - ./grafana.yaml
   - ./grafanadatasource.yaml
   - ./grafanadatasource-alertmanager.yaml
-  - ./grafana-admin-secret.sops.yaml
+  - ./externalsecret.yaml
