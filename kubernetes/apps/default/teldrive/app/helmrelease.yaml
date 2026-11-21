@@ -1,0 +1,113 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: teldrive
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: teldrive
+  interval: 1h
+  values:
+    controllers:
+      teldrive:
+        # Single replica: telegram.bot-rotation-backend stays at its
+        # "memory" default. If this is ever scaled beyond one replica,
+        # set TELDRIVE_TELEGRAM_BOT_ROTATION_BACKEND=database so bots are
+        # coordinated cluster-wide; keep at least one workers-on instance
+        # (or split API/worker controllers); and budget
+        # database.max-connections as the AGGREGATE across all replicas.
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/tgdrive/teldrive
+              tag: 2.0.14@sha256:dcc6695a69520fc1769f87cf026a5eb6e85430cbe96297bc222ba6f322bc33e2
+            env:
+              # Bind on all interfaces inside the pod. The default
+              # (127.0.0.1:8080) is unreachable from the Service and kubelet
+              # probes; reach control happens via the Service, as in the old
+              # compose setup (loopback + tailscale-IP bindings).
+              TELDRIVE_HTTP_ADDRESS:
+                value: 0.0.0.0:8080
+              TELDRIVE_TELEGRAM_CHANNEL_NAME_PREFIX:
+                value: tg
+              # Old config had one key (version 1). Keys live in teldrive-secrets
+              # as "1:<key>"; this must match the highest encrypted version.
+              TELDRIVE_ENCRYPTION_ACTIVE_KEY_VERSION:
+                value: "1"
+              # CNPG-generated connection string; the operator owns this secret.
+              TELDRIVE_DATABASE_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: cnpg-main-app
+                    key: uri
+              # Per-pod identity in pg_stat_activity. Costs nothing at one
+              # replica; if this ever scales, each instance's connection
+              # pool is distinguishable in Postgres instead of a shared
+              # ambiguous "teldrive-v2" label.
+              TELDRIVE_DATABASE_APPLICATION_NAME:
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+            envFrom:
+              - secretRef:
+                  name: teldrive-secrets
+            probes:
+              # Liveness = "is the HTTP server alive?" Must NOT gate on
+              # Telegram auth — channel init at boot is slow and would look
+              # like a hang, getting the pod killed.
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health/live
+                    port: 8080
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              # Readiness = "can this pod serve traffic?" Gates on DB +
+              # Telegram being ready, so the pod stays NotReady during boot
+              # without being killed.
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health/ready
+                    port: 8080
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: {drop: ["ALL"]}
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+    persistence:
+      # Scratch space for upload spooling / multipart buffering; the app is
+      # configured purely via env, nothing else is written to disk.
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+    service:
+      app:
+        controller: teldrive
+        ports:
+          http:
+            port: 8080
