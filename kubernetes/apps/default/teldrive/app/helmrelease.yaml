@@ -94,6 +94,8 @@ spec:
               limits:
                 memory: 1Gi
     defaultPodOptions:
+      # No API access needed; don't mint a SA JWT for the pod.
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
