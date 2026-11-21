@@ -13,3 +13,8 @@ spec:
     - backendRefs:
         - name: teldrive
           port: 8080
+      # Envoy Gateway defaults to a 15s request timeout; downloads, uploads
+      # and SSE progress streams are long-lived (teldrive's own read/write
+      # timeouts are 1h — its reverse-proxy docs prescribe 3600s).
+      timeouts:
+        request: 1h

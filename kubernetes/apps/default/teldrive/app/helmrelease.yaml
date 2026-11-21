@@ -31,6 +31,15 @@ spec:
               # compose setup (loopback + tailscale-IP bindings).
               TELDRIVE_HTTP_ADDRESS:
                 value: 0.0.0.0:8080
+              # Envoy (envoy-external) is teldrive's direct peer; the cluster
+              # pod CIDR covers it (and the cloudflared hop it appends to
+              # X-Forwarded-For). Trusting it lets teldrive honor
+              # X-Forwarded-Proto: https (Secure cookies) and log real client
+              # IPs. Trade-off: any in-cluster pod can spoof XFF — acceptable
+              # single-tenant; add a NetworkPolicy limiting ingress to envoy
+              # pods if that ever bothers you.
+              TELDRIVE_HTTP_TRUSTED_PROXIES:
+                value: 10.42.0.0/16
               TELDRIVE_TELEGRAM_CHANNEL_NAME_PREFIX:
                 value: tg
               # Old config had one key (version 1). Keys live in teldrive-secrets
