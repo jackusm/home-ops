@@ -9,9 +9,13 @@ spec:
       namespace: default
   interval: 1h
   path: ./kubernetes/apps/default/teldrive/app
-  # No postBuild.substituteFrom: the build has no ${...} placeholders. The
-  # secret reaches the container via envFrom/valueFrom, which flux resolves
-  # at apply time, not build time.
+  # Needed because app/httproute.yaml carries ${SECRET_DOMAIN}. Only
+  # cluster-secrets here: it is seeded by the root cluster-apps build,
+  # unlike app-owned secrets which must never be a substituteFrom source.
+  postBuild:
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository
