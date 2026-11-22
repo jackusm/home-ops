@@ -58,6 +58,11 @@ spec:
               persistentVolumeClaim:
                 claimName: grafana-pvc
   persistentVolumeClaim:
+    metadata:
+      labels:
+        # opt the Longhorn volume into the backup-daily recurring job so the
+        # label survives PVC recreation; matches the live volume label
+        recurring-job.longhorn.io/backup-daily: enabled
     spec:
       accessModes:
         - ReadWriteOnce
