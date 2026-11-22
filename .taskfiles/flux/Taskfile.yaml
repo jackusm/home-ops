@@ -64,7 +64,7 @@ tasks:
 
   diff:
     desc: Server-side diff of local working tree vs cluster (exit 1 = drift found)
-    cmd: flux diff kustomization flux-system --path {{.KUBERNETES_DIR}}/flux/cluster --recursive --local-sources GitRepository/flux-system/flux-system={{.KUBERNETES_DIR}}
+    cmd: flux diff kustomization flux-system --path {{.KUBERNETES_DIR}}/flux/cluster --recursive --local-sources GitRepository/flux-system/flux-system={{.ROOT_DIR}}
     preconditions:
       - test -f {{.KUBECONFIG}}
       - which flux
