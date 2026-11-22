@@ -37,8 +37,12 @@ spec:
             env:
               PORT: &port 3000
               # config, not secret material; explicit env wins over envFrom,
-              # so the stale placeholder key in the synced secret is ignored
-              WORKER_URL: "https://tg-s3.${SECRET_DOMAIN}"
+              # so the stale placeholder key in the synced secret is ignored.
+              # Worker URL is https://s3.$DOMAIN per the 2026-08-16 cutover
+              # (deploy.sh / processor-registry.ts derivation); the Bitwarden
+              # migration briefly pinned tg-s3.$SECRET_DOMAIN here, which has
+              # no DNS record and put the register loop in a crashloop.
+              WORKER_URL: "https://s3.${SECRET_DOMAIN}"
             envFrom:
               - secretRef:
                   name: tg-s3-processor-secret
